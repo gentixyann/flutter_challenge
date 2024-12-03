@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map_app/views/pages/home_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(
+    child: MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -28,16 +32,6 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const tokyoStation = CameraPosition(target: LatLng(35.681236, 139.767125));
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(title),
-      ),
-      body: const GoogleMap(
-        initialCameraPosition: tokyoStation,
-      ),
-    );
+    return const HomePage();
   }
 }
