@@ -3,19 +3,21 @@ import 'package:flutter_map_app/charger_spot.dart';
 import 'package:flutter_map_app/charger_spots_repository.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+// ChargerSpotsRepositoryを管理するプロバイダ
 final chargerSpotsRepositoryProvider =
     Provider((ref) => ChargerSpotsRepository());
 
-// 地図範囲内の充電スポットを非同期で取得するProvider
+// 可視範囲に基づく充電スポットの取得と管理
 final chargerSpotsProvider =
-    FutureProvider.family<GetChargerSpotsResponse, Map<String, double>>(
-  (ref, region) async {
+    FutureProvider.family<GetChargerSpotsResponse, LatLngBounds>(
+  (ref, bounds) async {
     final repository = ref.watch(chargerSpotsRepositoryProvider);
-    return await repository.getChargerSpots(
-      swLat: region['swLat']!,
-      swLng: region['swLng']!,
-      neLat: region['neLat']!,
-      neLng: region['neLng']!,
+
+    return repository.getChargerSpots(
+      swLat: bounds.southwest.latitude,
+      swLng: bounds.southwest.longitude,
+      neLat: bounds.northeast.latitude,
+      neLng: bounds.northeast.longitude,
     );
   },
 );
