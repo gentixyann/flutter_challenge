@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map_app/charger_spot.dart';
 import 'package:flutter_map_app/charger_spots_repository.dart';
 import 'package:flutter_map_app/providers/charger_spot_provider.dart';
+import 'package:flutter_map_app/providers/google_map_provider.dart';
 import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/providers/markers_provider.dart';
 import 'package:flutter_map_app/theme.dart';
@@ -78,7 +79,7 @@ class _GoogleMap extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mapController = ref.watch(_Providers.mapController);
+    final mapController = ref.watch(mapControllerProvider);
     final markers = ref.watch(markerProvider);
 
     return GoogleMap(
@@ -88,7 +89,7 @@ class _GoogleMap extends ConsumerWidget {
       markers: markers,
       onMapCreated: (GoogleMapController controller) async {
         // マップコントローラを状態に保存
-        ref.read(_Providers.mapController.notifier).state = controller;
+        ref.read(mapControllerProvider.notifier).state = controller;
       },
       onCameraIdle: () async {
         if (mapController != null) {
@@ -109,7 +110,9 @@ class _SearchButton extends ConsumerWidget {
       height: 60,
       margin: const EdgeInsets.only(top: 50, left: 15, right: 15),
       child: ElevatedButton(
-        onPressed: () => print('再検索'),
+        onPressed: () {
+          print('再検索');
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: ThemeColor.lightGreen,
           shape: RoundedRectangleBorder(
@@ -155,33 +158,31 @@ class _MyLocationButtonAndCard extends ConsumerWidget {
   }
 }
 
-@visibleForTesting
-class HomePageProviders {
-  static final mapController =
-      StateProvider.autoDispose<GoogleMapController?>((ref) {
-    return null;
-  });
+// @visibleForTesting
+// class HomePageProviders {
+//   // 位置データを取得し、カメラを移動させるメソッド
+//   static final moveCamera = Provider.autoDispose((ref) => () async {
+//         print('moveCamera');
+//         final mapController = ref.watch(_Providers.mapController);
+//         // 現在地の状態を更新
+//         ref.read(currentPositionProvider.notifier).state =
+//             await ref.refresh(locationProvider.future);
+//         final position = ref.watch(currentPositionProvider);
+//         final latitude = position?.latitude;
+//         final longitude = position?.longitude;
+//         if (latitude == null || longitude == null) {
+//           return;
+//         }
+//         print(position);
+//         await mapController?.moveCamera(
+//           CameraUpdate.newCameraPosition(
+//             CameraPosition(
+//               target: LatLng(latitude, longitude),
+//               zoom: 14,
+//             ),
+//           ),
+//         );
+//       });
+// }
 
-  // 位置データを取得し、カメラを移動させるメソッド
-  // static final moveCamera = Provider.autoDispose((ref) => () async {
-  //       final mapController = ref.watch(_Providers.mapController);
-  //       // 現在地の状態を監視
-  //       ref.read(currentPositionProvider.notifier).state =
-  //           await ref.refresh(locationProvider.future);
-  //       final position = ref.watch(currentPositionProvider);
-  //       final latitude = position?.latitude;
-  //       final longitude = position?.longitude;
-  //       if (latitude == null || longitude == null) {
-  //         return;
-  //       }
-  //       await mapController?.moveCamera(
-  //         CameraUpdate.newCameraPosition(
-  //           CameraPosition(
-  //             target: LatLng(latitude, longitude),
-  //           ),
-  //         ),
-  //       );
-  //     });
-}
-
-typedef _Providers = HomePageProviders;
+// typedef _Providers = HomePageProviders;
