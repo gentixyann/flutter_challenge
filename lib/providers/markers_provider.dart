@@ -24,6 +24,22 @@ class MarkerNotifier extends StateNotifier<Set<Marker>> {
         .toSet();
     setMarkers(newMarkers);
   }
+
+  // 充電スポットを取得し、マーカーを更新するメソッド
+  Future<void> searchSpots({
+    required WidgetRef ref,
+    required LatLngBounds bounds,
+  }) async {
+    try {
+      // 充電スポットを取得
+      final response = await ref.read(chargerSpotsProvider(bounds).future);
+
+      // 取得したレスポンスからマーカーを生成して更新
+      updateMarkersFromResponse(response);
+    } catch (error) {
+      print("Error fetching charger spots: $error");
+    }
+  }
 }
 
 // マーカー管理用の StateNotifierProvider

@@ -1,17 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map_app/charger_spot.dart';
-import 'package:flutter_map_app/charger_spots_repository.dart';
-import 'package:flutter_map_app/providers/charger_spot_provider.dart';
 import 'package:flutter_map_app/providers/google_map_provider.dart';
 import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/providers/markers_provider.dart';
-import 'package:flutter_map_app/theme.dart';
 import 'package:flutter_map_app/views/widgets/charger_spot_card.dart';
 import 'package:flutter_map_app/views/widgets/my_location_button.dart';
+import 'package:flutter_map_app/views/widgets/search_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomePage extends ConsumerWidget {
@@ -19,29 +13,6 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 可視範囲の状態を監視
-    final currentBounds = ref.watch(mapBoundsProvider);
-
-    // 可視範囲に基づいて充電スポットを取得
-    if (currentBounds != null) {
-      ref.listen<AsyncValue<GetChargerSpotsResponse>>(
-        chargerSpotsProvider(currentBounds),
-        (previous, next) {
-          next.when(
-            loading: () => print("Loading charger spots..."),
-            error: (error, stack) =>
-                print("Error loading charger spots: $error"),
-            data: (response) {
-              // MarkerNotifier のメソッドでマーカーを更新
-              ref
-                  .read(markerProvider.notifier)
-                  .updateMarkersFromResponse(response);
-            },
-          );
-        },
-      );
-    }
-
     return Scaffold(
       body: ref.watch(locationProvider).when(
             data: (position) {
@@ -56,7 +27,7 @@ class HomePage extends ConsumerWidget {
                 alignment: Alignment.topCenter,
                 children: [
                   _GoogleMap(initialCameraPosition: initialCameraPosition),
-                  const _SearchButton(),
+                  const SearchButton(),
                   const _MyLocationButtonAndCard(),
                 ],
               );
@@ -90,6 +61,9 @@ class _GoogleMap extends ConsumerWidget {
       onMapCreated: (GoogleMapController controller) async {
         // マップコントローラを状態に保存
         ref.read(mapControllerProvider.notifier).state = controller;
+        final bounds = await controller.getVisibleRegion();
+        ref.read(mapBoundsProvider.notifier).updateBounds(bounds);
+        ref.read(markerProvider.notifier).searchSpots(ref: ref, bounds: bounds);
       },
       onCameraIdle: () async {
         if (mapController != null) {
@@ -97,44 +71,6 @@ class _GoogleMap extends ConsumerWidget {
           ref.read(mapBoundsProvider.notifier).updateBounds(bounds);
         }
       },
-    );
-  }
-}
-
-class _SearchButton extends ConsumerWidget {
-  const _SearchButton();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      height: 60,
-      margin: const EdgeInsets.only(top: 50, left: 15, right: 15),
-      child: ElevatedButton(
-        onPressed: () {
-          print('再検索');
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: ThemeColor.lightGreen,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(34),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'このエリアでスポット検索',
-              style: TextStyle(
-                color: ThemeColor.green,
-              ),
-            ),
-            Icon(
-              Icons.search,
-              color: ThemeColor.green,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

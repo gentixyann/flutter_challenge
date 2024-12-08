@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map_app/providers/google_map_provider.dart';
 import 'package:flutter_map_app/providers/location_provider.dart';
+import 'package:flutter_map_app/providers/markers_provider.dart';
 import 'package:flutter_map_app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,8 +21,8 @@ class MyLocationButton extends ConsumerWidget {
           foregroundColor: ThemeColor.white,
           shape: const CircleBorder(),
         ),
-        onPressed: () {
-          ref.read(_Providers.moveCamera)();
+        onPressed: () async {
+          ref.read(_Providers.moveCamera)(widgetRef: ref);
         },
         child: const Icon(Icons.my_location),
       ),
@@ -32,7 +33,9 @@ class MyLocationButton extends ConsumerWidget {
 @visibleForTesting
 class MyLocationButtonProviders {
   // 位置データを取得し、カメラを移動させるメソッド
-  static final moveCamera = Provider.autoDispose((ref) => () async {
+  static final moveCamera = Provider.autoDispose((ref) => ({
+        required WidgetRef widgetRef,
+      }) async {
         final mapController = ref.watch(mapControllerProvider);
         // 現在地の状態を更新
         ref.read(currentPositionProvider.notifier).state =
@@ -51,6 +54,15 @@ class MyLocationButtonProviders {
             ),
           ),
         );
+        // // カメラ移動後に可視範囲を取得
+        final currentBounds = await mapController?.getVisibleRegion();
+
+        // // 可視範囲が取得できた場合、マーカーを更新
+        if (currentBounds != null) {
+          await ref
+              .read(markerProvider.notifier)
+              .searchSpots(ref: widgetRef, bounds: currentBounds);
+        }
       });
 }
 
