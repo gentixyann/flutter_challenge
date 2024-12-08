@@ -157,32 +157,3 @@ class _MyLocationButtonAndCard extends ConsumerWidget {
     );
   }
 }
-
-// @visibleForTesting
-// class HomePageProviders {
-//   // 位置データを取得し、カメラを移動させるメソッド
-//   static final moveCamera = Provider.autoDispose((ref) => () async {
-//         print('moveCamera');
-//         final mapController = ref.watch(_Providers.mapController);
-//         // 現在地の状態を更新
-//         ref.read(currentPositionProvider.notifier).state =
-//             await ref.refresh(locationProvider.future);
-//         final position = ref.watch(currentPositionProvider);
-//         final latitude = position?.latitude;
-//         final longitude = position?.longitude;
-//         if (latitude == null || longitude == null) {
-//           return;
-//         }
-//         print(position);
-//         await mapController?.moveCamera(
-//           CameraUpdate.newCameraPosition(
-//             CameraPosition(
-//               target: LatLng(latitude, longitude),
-//               zoom: 14,
-//             ),
-//           ),
-//         );
-//       });
-// }
-
-// typedef _Providers = HomePageProviders;
