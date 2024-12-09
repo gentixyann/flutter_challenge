@@ -62,7 +62,9 @@ class _GoogleMap extends ConsumerWidget {
         // マップコントローラを状態に保存
         ref.read(mapControllerProvider.notifier).state = controller;
         final bounds = await controller.getVisibleRegion();
+        // 可視範囲を更新
         ref.read(mapBoundsProvider.notifier).updateBounds(bounds);
+        // 充電スポットを再取得しマーカーを表示
         ref.read(markerProvider.notifier).searchSpots(ref: ref, bounds: bounds);
       },
       onCameraIdle: () async {
