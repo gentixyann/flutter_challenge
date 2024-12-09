@@ -32,6 +32,9 @@ class ChargerSpotListNotifier extends StateNotifier<List<ChargerSpot>> {
         neLng: bounds.northeast.longitude,
       );
       final spots = response.spots;
+      if (spots.isNotEmpty) {
+        state = spots;
+      }
       state = spots;
     } catch (e) {
       print('Error fetching ChargerSpots: $e');

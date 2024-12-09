@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map_app/charger_spots_repository.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'charger_spot_provider.dart';
 
 // SVGからBitmapDescriptorを生成する関数
 Future<BitmapDescriptor> _bitmapDescriptorFromSvgAsset(

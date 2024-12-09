@@ -1,61 +1,96 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map_app/charger_spot.dart';
 import 'package:flutter_map_app/theme.dart';
 import 'package:flutter_svg/svg.dart';
 
 class ChargerSpotCard extends StatelessWidget {
-  const ChargerSpotCard({super.key});
-
+  final ChargerSpot chargerSpot;
+  const ChargerSpotCard({
+    super.key,
+    required this.chargerSpot,
+  });
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      clipBehavior: Clip.antiAliasWithSaveLayer,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SvgPicture.asset(
-            'assets/card_place_holder.svg',
-            fit: BoxFit.fill,
-          ),
-          // 下部の詳細情報部分
-          const Padding(
-            padding: EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Title(),
-                SizedBox(height: 8),
-                _Power(),
-                SizedBox(height: 8),
-                _Bolt(),
-                SizedBox(height: 8),
-                _Time(),
-                SizedBox(height: 8),
-                _BusinessDays(),
-                SizedBox(height: 8),
-                _OpenMapAppButton(),
-              ],
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(horizontal: 5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ChargerSpotImage(chargerSpot: chargerSpot),
+            // 下部の詳細情報部分
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Title(chargerSpot.name),
+                  const SizedBox(height: 8),
+                  _Power(chargerSpot.chargerDevices),
+                  const SizedBox(height: 8),
+                  _Bolt(chargerSpot.chargerDevices),
+                  const SizedBox(height: 8),
+                  _Time(chargerSpot.serviceTimes),
+                  const SizedBox(height: 8),
+                  _BusinessDays(chargerSpot.serviceTimes),
+                  const SizedBox(height: 8),
+                  const _OpenMapAppButton(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _Title extends StatelessWidget {
-  const _Title();
+class _ChargerSpotImage extends StatelessWidget {
+  final ChargerSpot chargerSpot;
+
+  const _ChargerSpotImage({required this.chargerSpot});
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      '八景島シーパラダイス',
-      style: TextStyle(
+    String noImagePath = 'assets/card_place_holder.svg';
+    const double imageHeight = 72;
+    return chargerSpot.imageUrl != null && chargerSpot.imageUrl!.isNotEmpty
+        ? Image.network(
+            chargerSpot.imageUrl!,
+            width: double.infinity,
+            height: imageHeight,
+            fit: BoxFit.fitWidth,
+            errorBuilder: (context, error, stackTrace) {
+              return SvgPicture.asset(
+                noImagePath,
+                height: imageHeight,
+                fit: BoxFit.cover,
+              );
+            },
+          )
+        : SvgPicture.asset(
+            noImagePath,
+            height: imageHeight,
+            fit: BoxFit.cover,
+          );
+  }
+}
+
+class _Title extends StatelessWidget {
+  const _Title(this.name);
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      name,
+      style: const TextStyle(
         fontWeight: FontWeight.w700,
         fontSize: 18,
       ),
@@ -64,7 +99,9 @@ class _Title extends StatelessWidget {
 }
 
 class _Power extends StatelessWidget {
-  const _Power();
+  const _Power(this.chargerDevices);
+
+  final List<ChargerDevice> chargerDevices;
 
   @override
   Widget build(BuildContext context) {
@@ -75,14 +112,15 @@ class _Power extends StatelessWidget {
         ),
         const Text('充電器数'),
         const SizedBox(width: 15),
-        const Text('8台'),
+        Text('${chargerDevices.length}台'),
       ],
     );
   }
 }
 
 class _Bolt extends StatelessWidget {
-  const _Bolt();
+  const _Bolt(this.chargerDevices);
+  final List<ChargerDevice> chargerDevices;
 
   @override
   Widget build(BuildContext context) {
@@ -93,42 +131,56 @@ class _Bolt extends StatelessWidget {
         ),
         const Text('充電出力'),
         const SizedBox(width: 15),
-        const Text('3.2kW、6.0KW'),
+        Text('${chargerDevices.first.power}KW'),
       ],
     );
   }
 }
 
 class _Time extends StatelessWidget {
-  const _Time();
+  const _Time(this.serviceTime);
+  final List<ServiceTime> serviceTime;
 
   @override
   Widget build(BuildContext context) {
+    final firstServiceTime = serviceTime.isNotEmpty ? serviceTime.first : null;
+    final startTime = firstServiceTime?.startTime ?? '';
+    final endTime = firstServiceTime?.endTime ?? '';
+
     return Row(
       children: [
         SvgPicture.asset(
           'assets/watch_later.svg',
         ),
-        const Text(
-          '営業中',
+        Text(
+          firstServiceTime?.businessDay == true ? '営業中' : '営業時間外',
           style: TextStyle(
-            color: ThemeColor.green,
+            color: firstServiceTime?.businessDay == true
+                ? ThemeColor.green
+                : ThemeColor.gray,
           ),
         ),
         const SizedBox(width: 25),
-        const Text(
-          '10:00 - 19:00',
-        ),
+        Text('$startTime - $endTime'),
       ],
     );
   }
 }
 
 class _BusinessDays extends StatelessWidget {
-  const _BusinessDays();
+  const _BusinessDays(this.serviceTime);
+  final List<ServiceTime> serviceTime;
 
   @override
   Widget build(BuildContext context) {
+    // 休業日のみを抽出
+    final holidays =
+        serviceTime.where((serviceTime) => !serviceTime.businessDay);
+
+    // 曜日の文字列を連結
+    final holidayString =
+        holidays.map((holiday) => holiday.day.name).join(', ');
+
     return Row(
       children: [
         SvgPicture.asset(
@@ -138,9 +190,7 @@ class _BusinessDays extends StatelessWidget {
           '定休日',
         ),
         const SizedBox(width: 25),
-        const Text(
-          '土曜日',
-        ),
+        Text(holidayString.isNotEmpty ? holidayString : ' - '),
       ],
     );
   }
