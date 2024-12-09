@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map_app/providers/charger_spot_provider.dart';
 import 'package:flutter_map_app/providers/google_map_provider.dart';
 import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/providers/markers_provider.dart';
@@ -59,9 +59,15 @@ class MyLocationButtonProviders {
 
         // // 可視範囲が取得できた場合、マーカーを更新
         if (currentBounds != null) {
+          // 可視範囲内の充電スポットを取得して更新
+          await ref
+              .read(chargerSpotListProvider.notifier)
+              .fetchChargerSpots(currentBounds);
+          // 取得した充電スポットをもとにマーカーを更新
+          final chargerSpots = ref.watch(chargerSpotListProvider);
           await ref
               .read(markerProvider.notifier)
-              .searchSpots(ref: widgetRef, bounds: currentBounds);
+              .updateMarkersFromChargerSpots(chargerSpots);
         }
       });
 }

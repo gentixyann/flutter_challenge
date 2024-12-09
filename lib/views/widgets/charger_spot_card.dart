@@ -10,13 +10,13 @@ class ChargerSpotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 5),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAliasWithSaveLayer,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // 左寄せ
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SvgPicture.asset(
             'assets/card_place_holder.svg',

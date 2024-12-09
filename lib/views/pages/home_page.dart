@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_map_app/providers/charger_spot_provider.dart';
 import 'package:flutter_map_app/providers/google_map_provider.dart';
 import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/providers/markers_provider.dart';
-import 'package:flutter_map_app/views/widgets/charger_spot_card.dart';
+import 'package:flutter_map_app/views/widgets/charger_spot_carousel.dart';
 import 'package:flutter_map_app/views/widgets/my_location_button.dart';
 import 'package:flutter_map_app/views/widgets/search_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,25 +55,36 @@ class _GoogleMap extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mapController = ref.watch(mapControllerProvider);
     final markers = ref.watch(markerProvider);
+    final isMapInitialized = ref.watch(isMapInitializedProvider);
 
     return GoogleMap(
       initialCameraPosition: initialCameraPosition,
       myLocationEnabled: true,
       myLocationButtonEnabled: false,
       markers: markers,
-      onMapCreated: (GoogleMapController controller) async {
+      onMapCreated: (GoogleMapController controller) {
         // マップコントローラを状態に保存
         ref.read(mapControllerProvider.notifier).state = controller;
-        final bounds = await controller.getVisibleRegion();
-        // 可視範囲を更新
-        ref.read(mapBoundsProvider.notifier).updateBounds(bounds);
-        // 充電スポットを再取得しマーカーを表示
-        ref.read(markerProvider.notifier).searchSpots(ref: ref, bounds: bounds);
       },
       onCameraIdle: () async {
         if (mapController != null) {
           final bounds = await mapController.getVisibleRegion();
+          // 可視範囲の更新
           ref.read(mapBoundsProvider.notifier).updateBounds(bounds);
+          // 初回のみ充電スポットの取得とマーカーの更新を実行
+          if (!isMapInitialized) {
+            // 充電スポットを取得して更新
+            await ref
+                .read(chargerSpotListProvider.notifier)
+                .fetchChargerSpots(bounds);
+            // マーカー更新
+            final chargerSpots = ref.watch(chargerSpotListProvider);
+            await ref
+                .read(markerProvider.notifier)
+                .updateMarkersFromChargerSpots(chargerSpots);
+            // 初期化済みフラグを設定
+            ref.read(isMapInitializedProvider.notifier).state = true;
+          }
         }
       },
     );
@@ -82,16 +96,19 @@ class _MyLocationButtonAndCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Padding(
-      padding: EdgeInsets.all(10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          MyLocationButton(),
-          SizedBox(height: 20),
-          ChargerSpotCard(),
-        ],
-      ),
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: MyLocationButton(),
+        ),
+        SizedBox(height: 20),
+        Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: ChargerSpotCarousel(),
+        ),
+      ],
     );
   }
 }

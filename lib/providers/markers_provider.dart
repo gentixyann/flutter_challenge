@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map_app/charger_spot.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map_app/charger_spots_repository.dart';
 import 'package:flutter_svg/svg.dart';
@@ -54,6 +55,22 @@ class MarkerNotifier extends StateNotifier<Set<Marker>> {
     state = markers;
   }
 
+  // 充電スポットリストからマーカーを生成して更新するメソッド
+  Future<void> updateMarkersFromChargerSpots(List<ChargerSpot> spots) async {
+    final futures = spots.map((spot) async {
+      final icon = await _bitmapDescriptorFromSvgAsset('assets/Marker.svg');
+      return Marker(
+        markerId: MarkerId(spot.uuid),
+        position: LatLng(spot.latitude, spot.longitude),
+        icon: icon,
+        onTap: () => print('マーカー押した'),
+      );
+    }).toList();
+
+    final newMarkers = await Future.wait(futures);
+    setMarkers(newMarkers.toSet());
+  }
+
   // 充電スポットレスポンスからマーカーを非同期で更新
   Future<void> updateMarkersFromResponse(
       GetChargerSpotsResponse response) async {
@@ -65,6 +82,7 @@ class MarkerNotifier extends StateNotifier<Set<Marker>> {
         markerId: MarkerId(spot.uuid),
         position: LatLng(spot.latitude, spot.longitude),
         icon: icon,
+        onTap: () => print('マーカー押した'),
       );
     }).toList();
 
@@ -73,22 +91,6 @@ class MarkerNotifier extends StateNotifier<Set<Marker>> {
 
     // 新しいマーカーを設定
     setMarkers(newMarkers.toSet());
-  }
-
-  // 充電スポットを取得し、マーカーを更新するメソッド
-  Future<void> searchSpots({
-    required WidgetRef ref,
-    required LatLngBounds bounds,
-  }) async {
-    try {
-      // 充電スポットを取得
-      final response = await ref.read(chargerSpotsProvider(bounds).future);
-
-      // 取得したレスポンスからマーカーを生成して更新
-      updateMarkersFromResponse(response);
-    } catch (error) {
-      print("Error fetching charger spots: $error");
-    }
   }
 }
 

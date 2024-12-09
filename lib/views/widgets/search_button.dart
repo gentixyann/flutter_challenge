@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map_app/providers/charger_spot_provider.dart';
 import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/providers/markers_provider.dart';
 import 'package:flutter_map_app/theme.dart';
@@ -14,12 +15,18 @@ class SearchButton extends ConsumerWidget {
       height: 60,
       margin: const EdgeInsets.only(top: 50, left: 15, right: 15),
       child: ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
           // 再検索時に充電スポットを取得してマーカーを更新
           if (currentBounds != null) {
-            ref
+            // 可視範囲内の充電スポットを取得して更新
+            await ref
+                .read(chargerSpotListProvider.notifier)
+                .fetchChargerSpots(currentBounds);
+            // 取得した充電スポットをもとにマーカーを更新
+            final chargerSpots = ref.watch(chargerSpotListProvider);
+            await ref
                 .read(markerProvider.notifier)
-                .searchSpots(ref: ref, bounds: currentBounds);
+                .updateMarkersFromChargerSpots(chargerSpots);
           }
         },
         style: ElevatedButton.styleFrom(
