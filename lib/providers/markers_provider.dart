@@ -3,8 +3,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map_app/charger_spot.dart';
+import 'package:flutter_map_app/providers/carousel_provider.dart';
+import 'package:flutter_map_app/providers/charger_spot_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_map_app/charger_spots_repository.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -55,40 +56,31 @@ class MarkerNotifier extends StateNotifier<Set<Marker>> {
   }
 
   // 充電スポットリストからマーカーを生成して更新するメソッド
-  Future<void> updateMarkersFromChargerSpots(List<ChargerSpot> spots) async {
+  Future<void> updateMarkersFromChargerSpots(
+    List<ChargerSpot> spots,
+    WidgetRef ref,
+  ) async {
     final futures = spots.map((spot) async {
       final icon = await _bitmapDescriptorFromSvgAsset('assets/Marker.svg');
       return Marker(
-        markerId: MarkerId(spot.uuid),
-        position: LatLng(spot.latitude, spot.longitude),
-        icon: icon,
-        onTap: () => print('マーカー押した'),
-      );
+          markerId: MarkerId(spot.uuid),
+          position: LatLng(spot.latitude, spot.longitude),
+          icon: icon,
+          onTap: () {
+            // 選択されたChargerSpotを更新
+            ref.read(selectedChargerSpotProvider.notifier).state = spot;
+
+            // 対応するインデックスを取得してカルーセルを移動
+            final chargerSpots = ref.read(chargerSpotListProvider);
+            final index = chargerSpots.indexWhere((s) => s.uuid == spot.uuid);
+            if (index != -1) {
+              final pageController = ref.read(pageControllerProvider);
+              pageController.jumpToPage(index);
+            }
+          });
     }).toList();
 
     final newMarkers = await Future.wait(futures);
-    setMarkers(newMarkers.toSet());
-  }
-
-  // 充電スポットレスポンスからマーカーを非同期で更新
-  Future<void> updateMarkersFromResponse(
-      GetChargerSpotsResponse response) async {
-    // 各スポットの非同期マーカー生成をリスト化
-    final futures = response.spots.map((spot) async {
-      // SVGアイコンを非同期で生成
-      final icon = await _bitmapDescriptorFromSvgAsset('assets/Marker.svg');
-      return Marker(
-        markerId: MarkerId(spot.uuid),
-        position: LatLng(spot.latitude, spot.longitude),
-        icon: icon,
-        onTap: () => print('マーカー押した'),
-      );
-    }).toList();
-
-    // 非同期マーカー生成の結果を待つ
-    final newMarkers = await Future.wait(futures);
-
-    // 新しいマーカーを設定
     setMarkers(newMarkers.toSet());
   }
 }

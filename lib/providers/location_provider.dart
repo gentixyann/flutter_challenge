@@ -1,5 +1,3 @@
-import 'package:flutter_map_app/providers/charger_spot_provider.dart';
-import 'package:flutter_map_app/providers/markers_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -57,3 +55,31 @@ class MapBoundsNotifier extends StateNotifier<LatLngBounds?> {
     state = bounds;
   }
 }
+
+final moveCameraProvider = Provider<
+    Future<void> Function({
+      required GoogleMapController mapController,
+      required double latitude,
+      required double longitude,
+      double zoom,
+    })>((ref) {
+  return ({
+    required GoogleMapController mapController,
+    required double latitude,
+    required double longitude,
+    double zoom = 14.0,
+  }) async {
+    try {
+      await mapController.moveCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(latitude, longitude),
+            zoom: zoom,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error moving camera: $e');
+    }
+  };
+});

@@ -21,12 +21,12 @@ class SearchButton extends ConsumerWidget {
             // 可視範囲内の充電スポットを取得して更新
             await ref
                 .read(chargerSpotListProvider.notifier)
-                .fetchChargerSpots(currentBounds);
+                .fetchChargerSpots(currentBounds, ref);
             // 取得した充電スポットをもとにマーカーを更新
             final chargerSpots = ref.watch(chargerSpotListProvider);
             await ref
                 .read(markerProvider.notifier)
-                .updateMarkersFromChargerSpots(chargerSpots);
+                .updateMarkersFromChargerSpots(chargerSpots, ref);
           }
         },
         style: ElevatedButton.styleFrom(

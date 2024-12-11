@@ -23,7 +23,7 @@ class ChargerSpotListNotifier extends StateNotifier<List<ChargerSpot>> {
   ChargerSpotListNotifier(this._repository) : super([]);
 
   // 可視範囲内の ChargerSpot を取得し、状態を更新する
-  Future<void> fetchChargerSpots(LatLngBounds bounds) async {
+  Future<void> fetchChargerSpots(LatLngBounds bounds, WidgetRef ref) async {
     try {
       final response = await _repository.getChargerSpots(
         swLat: bounds.southwest.latitude,
@@ -32,10 +32,8 @@ class ChargerSpotListNotifier extends StateNotifier<List<ChargerSpot>> {
         neLng: bounds.northeast.longitude,
       );
       final spots = response.spots;
-      if (spots.isNotEmpty) {
-        state = spots;
-      }
       state = spots;
+      ref.read(selectedChargerSpotProvider.notifier).state = null;
     } catch (e) {
       print('Error fetching ChargerSpots: $e');
       state = [];

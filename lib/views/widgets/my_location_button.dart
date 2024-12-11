@@ -23,6 +23,7 @@ class MyLocationButton extends ConsumerWidget {
         ),
         onPressed: () async {
           ref.read(_Providers.moveCamera)(widgetRef: ref);
+          ref.read(selectedChargerSpotProvider.notifier).state = null;
         },
         child: const Icon(Icons.my_location),
       ),
@@ -38,37 +39,32 @@ class MyLocationButtonProviders {
       }) async {
         final mapController = ref.watch(mapControllerProvider);
         // 現在地の状態を更新
+        if (mapController != null) {}
         ref.read(currentPositionProvider.notifier).state =
             await ref.refresh(locationProvider.future);
         final position = ref.watch(currentPositionProvider);
         final latitude = position?.latitude;
         final longitude = position?.longitude;
-        if (latitude == null || longitude == null) {
+        if (mapController == null || latitude == null || longitude == null) {
           return;
         }
-        await mapController?.moveCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(latitude, longitude),
-              zoom: 14,
-            ),
-          ),
+        // カメラ移動
+        await ref.read(moveCameraProvider)(
+          mapController: mapController,
+          latitude: latitude,
+          longitude: longitude,
         );
-        // // カメラ移動後に可視範囲を取得
-        final currentBounds = await mapController?.getVisibleRegion();
-
-        // // 可視範囲が取得できた場合、マーカーを更新
-        if (currentBounds != null) {
-          // 可視範囲内の充電スポットを取得して更新
-          await ref
-              .read(chargerSpotListProvider.notifier)
-              .fetchChargerSpots(currentBounds);
-          // 取得した充電スポットをもとにマーカーを更新
-          final chargerSpots = ref.watch(chargerSpotListProvider);
-          await ref
-              .read(markerProvider.notifier)
-              .updateMarkersFromChargerSpots(chargerSpots);
-        }
+        // カメラ移動後に可視範囲を取得
+        final currentBounds = await mapController.getVisibleRegion();
+        // 可視範囲内の充電スポットを取得して更新
+        await ref
+            .read(chargerSpotListProvider.notifier)
+            .fetchChargerSpots(currentBounds, widgetRef);
+        // 取得した充電スポットをもとにマーカーを更新
+        final chargerSpots = ref.watch(chargerSpotListProvider);
+        await ref
+            .read(markerProvider.notifier)
+            .updateMarkersFromChargerSpots(chargerSpots, widgetRef);
       });
 }
 

@@ -1,50 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map_app/charger_spot.dart';
+import 'package:flutter_map_app/providers/charger_spot_provider.dart';
+import 'package:flutter_map_app/providers/google_map_provider.dart';
+import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
-class ChargerSpotCard extends StatelessWidget {
+class ChargerSpotCard extends ConsumerWidget {
   final ChargerSpot chargerSpot;
   const ChargerSpotCard({
     super.key,
     required this.chargerSpot,
   });
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mapController = ref.watch(mapControllerProvider);
     return SingleChildScrollView(
-      child: Card(
-        elevation: 4,
-        margin: const EdgeInsets.symmetric(horizontal: 5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ChargerSpotImage(chargerSpot: chargerSpot),
-            // 下部の詳細情報部分
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _Title(chargerSpot.name),
-                  const SizedBox(height: 8),
-                  _Power(chargerSpot.chargerDevices),
-                  const SizedBox(height: 8),
-                  _Bolt(chargerSpot.chargerDevices),
-                  const SizedBox(height: 8),
-                  _Time(chargerSpot.serviceTimes),
-                  const SizedBox(height: 8),
-                  _BusinessDays(chargerSpot.serviceTimes),
-                  const SizedBox(height: 8),
-                  const _OpenMapAppButton(),
-                ],
+      child: GestureDetector(
+        onTap: () async {
+          ref.read(selectedChargerSpotProvider.notifier).state = chargerSpot;
+          final selectedChargerSpot = ref.watch(selectedChargerSpotProvider);
+          if (mapController != null && selectedChargerSpot != null) {
+            await ref.read(moveCameraProvider)(
+              mapController: mapController,
+              latitude: selectedChargerSpot.latitude,
+              longitude: selectedChargerSpot.longitude,
+            );
+          }
+        },
+        child: Card(
+          elevation: 4,
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ChargerSpotImage(chargerSpot: chargerSpot),
+              // 下部の詳細情報部分
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Title(chargerSpot.name),
+                    const SizedBox(height: 8),
+                    _Power(chargerSpot.chargerDevices),
+                    const SizedBox(height: 8),
+                    _Bolt(chargerSpot.chargerDevices),
+                    const SizedBox(height: 8),
+                    _Time(chargerSpot.serviceTimes),
+                    const SizedBox(height: 8),
+                    _BusinessDays(chargerSpot.serviceTimes),
+                    const SizedBox(height: 8),
+                    const _OpenMapAppButton(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
