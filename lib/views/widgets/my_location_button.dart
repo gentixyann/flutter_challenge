@@ -5,7 +5,6 @@ import 'package:flutter_map_app/providers/location_provider.dart';
 import 'package:flutter_map_app/providers/markers_provider.dart';
 import 'package:flutter_map_app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MyLocationButton extends ConsumerWidget {
   const MyLocationButton({super.key});
@@ -39,7 +38,6 @@ class MyLocationButtonProviders {
       }) async {
         final mapController = ref.watch(mapControllerProvider);
         // 現在地の状態を更新
-        if (mapController != null) {}
         ref.read(currentPositionProvider.notifier).state =
             await ref.refresh(locationProvider.future);
         final position = ref.watch(currentPositionProvider);
