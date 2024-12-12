@@ -22,6 +22,14 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def dartDefines= []
+ if (project.hasProperty('dart-defines')) {
+     dartDefines = project.property('dart-defines').split(',').collectEntries{ entry ->
+         def pair = new String(entry.decodeBase64(), 'UTF-8').split('=')
+         [(pair.first()): pair.last()]
+     }
+}
+
 android {
     namespace "com.example.flutter_map_app_template"
     compileSdk flutter.compileSdkVersion
@@ -49,6 +57,7 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        resValue "string", "GMAP_KEY", "${dartDefines.GMAP_ANDROID_KEY}"
     }
 
     buildTypes {
